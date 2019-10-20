@@ -12,6 +12,12 @@ class User extends Model {
       },
       {
         sequelize,
+      },
+      {
+        define: {
+          //prevent sequelize from pluralizing table names
+          freezeTableName: true,
+        },
       }
     );
 

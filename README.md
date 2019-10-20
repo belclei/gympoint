@@ -74,3 +74,5 @@ Também foram utilizadas as seguintes ferramentas:
 
 - Docker
 - http://md5online.org
+- Insomnia
+- Postbird
