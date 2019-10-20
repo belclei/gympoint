@@ -39,7 +39,7 @@ class PlanController {
       const plan = await Plan.findByPk(req.params.id);
       return res.json(await plan.update(req.body));
     } catch (error) {
-      return res.status(400).json({ error: 'Plan does not exist' });
+      return res.status(404).json({ error: 'Plan does not exist' });
     }
   }
   async delete(req, res) {
