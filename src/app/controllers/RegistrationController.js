@@ -1,9 +1,18 @@
 import * as Yup from 'yup';
-import { addMonths, parseISO, startOfDay, isBefore, endOfDay } from 'date-fns';
+import {
+  addMonths,
+  parseISO,
+  startOfDay,
+  isBefore,
+  endOfDay,
+  format,
+} from 'date-fns';
 
 import Plan from '../models/Plan';
 import Student from '../models/Student';
 import Registration from '../models/Registration';
+
+import Mail from '../../lib/mail';
 
 class RegistrationController {
   async index(req, res) {
@@ -63,6 +72,19 @@ class RegistrationController {
       price,
     });
 
+    Mail.sendMail({
+      to: `${student.name} <${student.email}>`,
+      subject: 'Matricula efetuada',
+      template: 'registration',
+      context: {
+        student: student.name,
+        plan: plan.title,
+        start_date: format(dayStart, 'dd/MM/yyyy'),
+        end_date: format(end_date, 'dd/MM/yyyy'),
+        price,
+      },
+    });
+
     return res.json(registration);
   }
 
@@ -103,16 +125,28 @@ class RegistrationController {
     const end_date = endOfDay(addMonths(dayStart, plan.duration));
     const price = (plan.price * plan.duration).toFixed(2);
 
-    //enviar email ao estudante avisando da atualização de sua matrícula
-    return res.json(
-      await registration.update({
-        student_id,
-        plan_id,
-        start_date,
-        end_date,
+    const newRegistration = await registration.update({
+      student_id,
+      plan_id,
+      start_date,
+      end_date,
+      price,
+    });
+
+    Mail.sendMail({
+      to: `${student.name} <${student.email}>`,
+      subject: 'Matricula efetuada',
+      template: 'registration',
+      context: {
+        student: student.name,
+        plan: plan.title,
+        start_date: format(dayStart, 'dd/MM/yyyy'),
+        end_date: format(end_date, 'dd/MM/yyyy'),
         price,
-      })
-    );
+      },
+    });
+
+    return res.json(newRegistration);
   }
 
   async delete(req, res) {

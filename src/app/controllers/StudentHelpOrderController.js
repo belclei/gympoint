@@ -3,6 +3,7 @@ import { addMonths, parseISO, startOfDay, isBefore, endOfDay } from 'date-fns';
 
 import Student from '../models/Student';
 import HelpOrder from '../models/HelpOrder';
+import Mail from '../../lib/mail';
 
 class StudentHelpOrderController {
   async index(req, res) {
@@ -50,10 +51,28 @@ class StudentHelpOrderController {
     const { answer } = req.body;
     const { id } = req.params;
 
-    const helpOrder = await HelpOrder.findByPk(id);
+    const helpOrder = await HelpOrder.findByPk(id, {
+      include: [
+        {
+          model: Student,
+          as: 'student',
+        },
+      ],
+    });
     if (!helpOrder) {
       return res.status(404).json({ error: 'Help order does not exist.' });
     }
+
+    Mail.sendMail({
+      to: `${helpOrder.student.name} <${helpOrder.student.email}>`,
+      subject: 'Auxílio atendido',
+      template: 'helpOrder',
+      context: {
+        student: helpOrder.student.name,
+        question: helpOrder.question,
+        answer,
+      },
+    });
 
     return res.json(
       await helpOrder.update({
